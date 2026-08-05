@@ -71,6 +71,43 @@
                 margin-bottom: 10px;
             }
         }
+
+        /* Styling Pagination */
+        .pagination-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 38px;
+            height: 38px;
+            padding: 0 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            color: #4b5563;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #111827;
+        }
+
+        .pagination-btn.active {
+            background: #111827;
+            border-color: #111827;
+            color: white;
+            cursor: default;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -85,9 +122,9 @@
             <div class="flex-1">
                 <p class="uppercase font-bold tracking-tight leading-tight text-12pt">PEMERINTAH PROVINSI JAWA TIMUR</p>
                 <p class="uppercase font-bold leading-tight text-12pt">DINAS PENDIDIKAN</p>
-                <p class="uppercase font-bold leading-tight text-16pt">SMK NEGERI 2 TEGALSARI</p>
-                <p class="text-10pt leading-tight italic">Jln. KH. Achmad Musayyidi No. 2 Karangdoro, Tegalsari, Banyuwangi, 68491</p>
-                <p class="text-10pt leading-tight italic text-blue-600">Telp. 0812 1682 9150 E-mail: smknegeri2tegalsari@gmail.com</p>
+                <p class="uppercase font-bold leading-tight text-16pt">SEKOLAH MENENGAH KEJURUAN NEGERI 2 TEGALSARI</p>
+                <p class="text-10pt leading-tight italic">Jalan KH. Achmad Musayyidi Nomor 2 Karangdoro, Tegalsari, Banyuwangi, 68491</p>
+                <p class="text-10pt leading-tight italic text-blue-600">Telepon 0812 1682 9150 Posel smknegeri2tegalsari@gmail.com</p>
             </div>
             <div class="hidden sm:block w-[80px]"></div>
         </div>
@@ -117,7 +154,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                 </div>
-                <!-- Mengubah warna teks menjadi abu-abu muda dan transparansi 50% -->
                 <h2 class="text-2xl font-bold text-gray-400/50 mb-3 tracking-tight">Data presensi hari ini tidak tersedia</h2>
                 <p id="error-message" class="text-gray-300/40 max-w-md leading-relaxed mb-8 text-sm font-medium">Gagal mengambil data dari server.</p>
                 <button onclick="fetchData()" class="px-10 py-3.5 bg-gray-900 text-white rounded-lg font-bold hover:bg-black transform transition active:scale-95 shadow-lg shadow-gray-200 uppercase text-xs tracking-widest">
@@ -126,17 +162,29 @@
             </div>
 
             <!-- Data Table -->
-            <div id="data-container" class="hidden overflow-x-auto">
-                <table class="w-full text-left border-collapse font-times">
-                    <thead>
-                        <tr id="table-head" class="bg-gray-50 border-b border-gray-200">
-                            <!-- Header data -->
-                        </tr>
-                    </thead>
-                    <tbody id="table-body" class="divide-y divide-gray-100">
-                        <!-- Row data -->
-                    </tbody>
-                </table>
+            <div id="data-container" class="hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse font-times">
+                        <thead>
+                            <tr id="table-head" class="bg-gray-50 border-b border-gray-200">
+                                <!-- Header data -->
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-gray-100">
+                            <!-- Row data -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div id="pagination-container" class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gray-50/50 border-t border-gray-200 font-modern">
+                    <p id="pagination-info" class="text-sm text-gray-500 font-medium">
+                        <!-- Info halaman -->
+                    </p>
+                    <div id="pagination-buttons" class="flex flex-wrap items-center gap-2">
+                        <!-- Tombol halaman -->
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -153,6 +201,9 @@
         const LOGO_URL = 'https://lh3.googleusercontent.com/u/0/d/1H50VHCq-M7qyzYHO-Ftq3QtTfp0Fkgyf';
         const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJP1ppPrXAKGP8jhTx7KgygjghYt_3ppQ3i2fcCm82ag05A4uiYbvwA31okf4mG2oKpTc1_u7hwloX/pub?gid=0&single=true&output=csv';
 
+        // Konfigurasi Pagination
+        const ROWS_PER_PAGE = 20; // Maksimal data per halaman
+
         const loadingState = document.getElementById('loading-state');
         const errorState = document.getElementById('error-state');
         const dataContainer = document.getElementById('data-container');
@@ -161,11 +212,17 @@
         const dateDisplay = document.getElementById('current-date');
         const errorMessage = document.getElementById('error-message');
         const logoKop = document.getElementById('logo-kop');
+        const paginationInfo = document.getElementById('pagination-info');
+        const paginationButtons = document.getElementById('pagination-buttons');
 
         logoKop.src = LOGO_URL;
 
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         dateDisplay.innerText = new Date().toLocaleDateString('id-ID', options);
+
+        // State untuk pagination
+        let allValidRows = []; // Menyimpan seluruh data valid dari spreadsheet
+        let currentPage = 1;   // Halaman yang sedang aktif
 
         async function fetchData() {
             loadingState.classList.remove('hidden');
@@ -191,7 +248,7 @@
 
                 if (rows.length < 5) throw new Error('Data Belum Tersedia');
 
-                displayData(rows);
+                processAndStoreData(rows);
             } catch (error) {
                 console.error('Fetch Error:', error);
                 if (error.message === 'Failed to fetch') {
@@ -202,15 +259,39 @@
             }
         }
 
-        function displayData(rows) {
+        function processAndStoreData(rows) {
+            // Kosongkan array data valid sebelumnya
+            allValidRows = [];
+
+            for (let i = 4; i < rows.length; i++) {
+                if (!rows[i] || rows[i].join('').trim() === "") continue;
+                
+                const START_COL = 8; 
+                const END_COL = 11; 
+                const rowDataFromSheet = rows[i].slice(START_COL, END_COL);
+                
+                if (!rowDataFromSheet[0] || rowDataFromSheet[0].trim() === "" || rowDataFromSheet[0].trim() === '""') continue;
+                
+                allValidRows.push(rowDataFromSheet);
+            }
+
+            if (allValidRows.length === 0) {
+                showError('Tidak ada data siswa tidak hadir.');
+                return;
+            }
+
+            // Reset ke halaman pertama saat memuat data baru
+            currentPage = 1;
+            renderTable();
+
+            loadingState.classList.add('hidden');
+            dataContainer.classList.remove('hidden');
+        }
+
+        function renderTable() {
+            // Render Header Tabel
             tableHead.innerHTML = '';
-            tableBody.innerHTML = '';
-
-            const START_COL = 8; 
-            const END_COL = 11; 
-
             const manualHeaders = ["No", "Nama Siswa", "Kelas", "Keterangan"];
-            
             manualHeaders.forEach((headerText) => {
                 const th = document.createElement('th');
                 th.className = `px-6 py-5 text-sm font-extrabold text-gray-700 border-b border-gray-200 uppercase text-center tracking-widest bg-gray-50/50`;
@@ -218,42 +299,110 @@
                 tableHead.appendChild(th);
             });
 
-            let displayCounter = 1;
-            let validRowsCount = 0;
+            // Render Body Tabel sesuai halaman aktif
+            tableBody.innerHTML = '';
+            const totalPages = Math.ceil(allValidRows.length / ROWS_PER_PAGE);
+            const startIndex = (currentPage - 1) * ROWS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ROWS_PER_PAGE, allValidRows.length);
+            const pageRows = allValidRows.slice(startIndex, endIndex);
 
-            for (let i = 4; i < rows.length; i++) {
-                if (!rows[i] || rows[i].join('').trim() === "") continue;
-                
-                const rowDataFromSheet = rows[i].slice(START_COL, END_COL);
-                if (!rowDataFromSheet[0] || rowDataFromSheet[0].trim() === "" || rowDataFromSheet[0].trim() === '""') continue;
-                
-                validRowsCount++;
+            pageRows.forEach((rowDataFromSheet, index) => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-blue-50/30 transition-colors';
                 
+                // Kolom Nomor (berurutan global, bukan reset tiap halaman)
                 const tdNo = document.createElement('td');
                 tdNo.className = 'px-6 py-4 text-sm font-medium text-gray-400 text-center w-16';
-                tdNo.textContent = displayCounter++;
+                tdNo.textContent = startIndex + index + 1;
                 tr.appendChild(tdNo);
 
-                rowDataFromSheet.forEach((cell, index) => {
+                rowDataFromSheet.forEach((cell, cellIndex) => {
                     const td = document.createElement('td');
-                    const alignClass = (index === 0) ? "text-left text-gray-700" : "text-center text-gray-600";
+                    const alignClass = (cellIndex === 0) ? "text-left text-gray-700" : "text-center text-gray-600";
                     td.className = `px-6 py-4 text-sm ${alignClass}`;
                     td.textContent = cell.replace(/^"(.*)"$/, '$1').trim();
                     tr.appendChild(td);
                 });
                 
                 tableBody.appendChild(tr);
-            }
+            });
 
-            if (validRowsCount === 0) {
-                showError('Tidak ada data siswa tidak hadir.');
+            // Render Pagination
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            // Informasi Halaman (Contoh: Menampilkan 1-20 dari 54 data)
+            const startIndex = (currentPage - 1) * ROWS_PER_PAGE + 1;
+            const endIndex = Math.min(currentPage * ROWS_PER_PAGE, allValidRows.length);
+            paginationInfo.innerHTML = `Menampilkan <span class="font-semibold text-gray-700">${startIndex}-${endIndex}</span> dari <span class="font-semibold text-gray-700">${allValidRows.length}</span> data`;
+
+            // Kosongkan tombol sebelumnya
+            paginationButtons.innerHTML = '';
+
+            // Jika hanya 1 halaman, sembunyikan pagination
+            if (totalPages <= 1) {
+                document.getElementById('pagination-container').classList.add('hidden');
                 return;
             }
+            document.getElementById('pagination-container').classList.remove('hidden');
 
-            loadingState.classList.add('hidden');
-            dataContainer.classList.remove('hidden');
+            // Tombol Sebelumnya (Previous)
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'pagination-btn';
+            prevBtn.innerHTML = '&larr; Sebelumnya';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => goToPage(currentPage - 1);
+            paginationButtons.appendChild(prevBtn);
+
+            // Generate Nomor Halaman
+            const pageNumbers = getPageNumbers(currentPage, totalPages);
+            pageNumbers.forEach(p => {
+                const btn = document.createElement('button');
+                if (p === '...') {
+                    btn.className = 'pagination-btn cursor-default';
+                    btn.textContent = '...';
+                    btn.disabled = true;
+                } else {
+                    btn.className = 'pagination-btn';
+                    if (p === currentPage) btn.classList.add('active');
+                    btn.textContent = p;
+                    btn.onclick = () => goToPage(p);
+                }
+                paginationButtons.appendChild(btn);
+            });
+
+            // Tombol Selanjutnya (Next)
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'pagination-btn';
+            nextBtn.innerHTML = 'Selanjutnya &rarr;';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => goToPage(currentPage + 1);
+            paginationButtons.appendChild(nextBtn);
+        }
+
+        // Algoritma untuk membuat nomor halaman pintar (dengan ellipsis "..." jika halaman banyak)
+        function getPageNumbers(current, total) {
+            if (total <= 7) {
+                return Array.from({ length: total }, (_, i) => i + 1);
+            }
+
+            const pages = [];
+            if (current <= 3) {
+                pages.push(1, 2, 3, 4, '...', total);
+            } else if (current >= total - 2) {
+                pages.push(1, '...', total - 3, total - 2, total - 1, total);
+            } else {
+                pages.push(1, '...', current - 1, current, current + 1, '...', total);
+            }
+            return pages;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
+            // Scroll ke atas tabel saat pindah halaman agar pengguna tidak kehilangan posisi
+            dataContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function showError(msg) {
@@ -266,13 +415,4 @@
         window.onload = fetchData;
     </script>
 </body>
-
 </html>
-
-
-
-
-
-
-
-
