@@ -193,21 +193,21 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <!-- Filter Nama -->
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Cari Nama Siswa</label>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Cari Nama Murid</label>
                             <input type="text" id="filter-nama" class="filter-input w-full" placeholder="Ketik nama...">
                         </div>
                         <!-- Filter Jurusan -->
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Jurusan</label>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Kelas</label>
                             <select id="filter-jurusan" class="filter-input w-full">
-                                <option value="">Semua Jurusan</option>
+                                <option value="">Semua Kelas</option>
                             </select>
                         </div>
                         <!-- Filter Kelas -->
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Kelas</label>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Jurusan</label>
                             <select id="filter-kelas" class="filter-input w-full">
-                                <option value="">Semua Kelas</option>
+                                <option value="">Semua Jurusan</option>
                             </select>
                         </div>
                         <!-- Reset Filter -->
@@ -397,7 +397,7 @@
             }
 
             if (allValidRows.length === 0) {
-                showError('Tidak ada data siswa.');
+                showError('Tidak ada data murid.');
                 return;
             }
 
@@ -464,7 +464,7 @@
         function renderTable() {
             // Render Header Tabel
             tableHead.innerHTML = '';
-            const manualHeaders = ["No", "Nama Siswa", "Jurusan", "Waktu", "Koordinat", "Jarak"];
+            const manualHeaders = ["No", "Nama", "Jurusan", "Waktu", "Koordinat", "Jarak"];
             manualHeaders.forEach((headerText) => {
                 const th = document.createElement('th');
                 th.className = `px-4 py-4 text-sm font-extrabold text-gray-700 border-b border-gray-200 uppercase text-center tracking-widest bg-gray-50/50 whitespace-nowrap`;
