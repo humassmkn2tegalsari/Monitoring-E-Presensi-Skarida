@@ -62,7 +62,6 @@
             .logo-container { margin-bottom: 10px; }
         }
 
-        /* Pagination Styling */
         .pagination-btn {
             display: inline-flex;
             align-items: center;
@@ -99,7 +98,6 @@
             cursor: not-allowed;
         }
 
-        /* Filter Styling */
         .filter-input {
             padding: 8px 12px;
             border: 1px solid #e5e7eb;
@@ -116,7 +114,6 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        /* Empty state styling */
         .empty-state {
             display: none;
             text-align: center;
@@ -127,7 +124,6 @@
             display: block;
         }
 
-        /* Tab Styling */
         .tab-btn {
             position: relative;
             display: inline-flex;
@@ -185,7 +181,6 @@
 <body class="bg-gray-50 min-h-screen">
 
     <div class="container mx-auto px-4 py-8 max-w-6xl">
-        <!-- Kop Surat -->
         <div class="flex flex-col sm:flex-row items-center font-times border-b-4 border-black pb-4 mb-8 text-center">
             <div class="logo-container sm:mr-4">
                 <img id="logo-kop" src="" alt="Logo" class="logo-img" onerror="this.style.display='none'">
@@ -201,7 +196,6 @@
             <div class="hidden sm:block w-[80px]"></div>
         </div>
 
-        <!-- Judul Laporan (Dinamis sesuai tab) -->
         <div class="text-center mb-10 font-modern">
             <h1 id="report-title" class="text-14pt font-bold text-gray-800 uppercase leading-snug">
                 DAFTAR HADIR E-PRESENSI<br>
@@ -210,10 +204,8 @@
             <p class="text-12pt text-gray-600 mt-2 font-semibold" id="current-date"></p>
         </div>
 
-        <!-- Main Content Area -->
         <div id="app-container" class="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
 
-            <!-- Tab Switcher -->
             <div id="tab-container" class="flex border-b border-gray-200 bg-white overflow-x-auto font-modern">
                 <button id="tab-hadir" class="tab-btn active" onclick="switchTab('hadir')">
                     <span class="tab-icon">
@@ -242,13 +234,11 @@
                 </button>
             </div>
             
-            <!-- Loading State -->
             <div id="loading-state" class="flex flex-col items-center justify-center p-24 font-modern italic">
                 <div class="loader ease-linear rounded-full border-4 border-gray-100 h-14 w-14 mb-6"></div>
                 <p class="text-gray-400 font-medium tracking-wide">Memperbarui data...</p>
             </div>
 
-            <!-- Error State -->
             <div id="error-state" class="hidden flex flex-col items-center justify-center p-16 text-center font-modern">
                 <div class="bg-red-50 p-5 rounded-2xl mb-6">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -262,10 +252,8 @@
                 </button>
             </div>
 
-            <!-- Data Table -->
             <div id="data-container" class="hidden">
                 
-                <!-- Filter Section -->
                 <div id="filter-container" class="p-4 bg-gray-50/80 border-b border-gray-200 font-modern">
                     <div class="flex items-center mb-3 gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -274,33 +262,28 @@
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Filter Data</h3>
                     </div>
                     <div id="filter-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                        <!-- Filter Nama -->
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Cari Nama Murid</label>
                             <input type="text" id="filter-nama" class="filter-input w-full" placeholder="Ketik nama...">
                         </div>
-                        <!-- Filter Kelas -->
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Kelas</label>
                             <select id="filter-kelas" class="filter-input w-full">
                                 <option value="">Semua Kelas</option>
                             </select>
                         </div>
-                        <!-- Filter Jurusan -->
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Jurusan</label>
                             <select id="filter-jurusan" class="filter-input w-full">
                                 <option value="">Semua Jurusan</option>
                             </select>
                         </div>
-                        <!-- Filter Jenis Izin (hanya tab Izin) -->
                         <div id="filter-jenis-container" class="hidden">
                             <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Izin</label>
                             <select id="filter-jenis" class="filter-input w-full">
                                 <option value="">Semua Jenis</option>
                             </select>
                         </div>
-                        <!-- Reset Filter -->
                         <div class="flex items-end">
                             <button onclick="resetFilters()" class="w-full px-4 py-2 bg-gray-900 text-white rounded-lg font-semibold text-xs uppercase tracking-wider hover:bg-black transition active:scale-95">
                                 Reset Filter
@@ -310,21 +293,15 @@
                     <p id="filter-result" class="mt-3 text-xs text-gray-500 font-medium"></p>
                 </div>
 
-                <!-- Table -->
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse font-modern">
                         <thead>
-                            <tr id="table-head" class="bg-gray-50 border-b border-gray-200">
-                                <!-- Header data -->
-                            </tr>
+                            <tr id="table-head" class="bg-gray-50 border-b border-gray-200"></tr>
                         </thead>
-                        <tbody id="table-body" class="divide-y divide-gray-100">
-                            <!-- Row data -->
-                        </tbody>
+                        <tbody id="table-body" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
 
-                <!-- Empty State -->
                 <div id="empty-state" class="empty-state font-modern">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -333,7 +310,6 @@
                     <p class="text-gray-400 text-sm">Coba ubah atau reset filter Anda</p>
                 </div>
 
-                <!-- Pagination Controls -->
                 <div id="pagination-container" class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gray-50/50 border-t border-gray-200 font-modern">
                     <p id="pagination-info" class="text-sm text-gray-500 font-medium"></p>
                     <div id="pagination-buttons" class="flex flex-wrap items-center gap-2"></div>
@@ -341,20 +317,13 @@
             </div>
         </div>
 
-        <!-- Footer Info -->
         <div class="mt-6 text-center text-xs text-gray-400 font-times font-medium italic">
             Dicetak secara otomatis dari sistem E-Presensi Skarida.
         </div>
     </div>
 
     <script>
-        /**
-         * ============================================================
-         * KONFIGURASI APLIKASI
-         * ============================================================
-         */
         const LOGO_URL = 'https://lh3.googleusercontent.com/u/0/d/1H50VHCq-M7qyzYHO-Ftq3QtTfp0Fkgyf';
-        
         const SHEET_CSV_URL_HADIR = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJP1ppPrXAKGP8jhTx7KgygjghYt_3ppQ3i2fcCm82ag05A4uiYbvwA31okf4mG2oKpTc1_u7hwloX/pub?gid=0&single=true&output=csv';
         const SHEET_CSV_URL_IZIN = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJP1ppPrXAKGP8jhTx7KgygjghYt_3ppQ3i2fcCm82ag05A4uiYbvwA31okf4mG2oKpTc1_u7hwloX/pub?gid=457704213&single=true&output=csv';
 
@@ -378,7 +347,6 @@
 
         const ROWS_PER_PAGE = 20;
 
-        // Elements
         const loadingState = document.getElementById('loading-state');
         const errorState = document.getElementById('error-state');
         const dataContainer = document.getElementById('data-container');
@@ -396,7 +364,6 @@
         const badgeIzin = document.getElementById('badge-izin');
         const filterGrid = document.getElementById('filter-grid');
 
-        // Filter elements
         const filterNama = document.getElementById('filter-nama');
         const filterKelas = document.getElementById('filter-kelas');
         const filterJurusan = document.getElementById('filter-jurusan');
@@ -466,14 +433,12 @@
                 if (resultHadir.status === 'fulfilled') {
                     processDataHadir(resultHadir.value);
                 } else {
-                    console.warn('Data kehadiran gagal dimuat:', resultHadir.reason);
                     dataStore.hadir.all = [];
                 }
 
                 if (resultIzin.status === 'fulfilled') {
                     processDataIzin(resultIzin.value);
                 } else {
-                    console.warn('Data izin gagal dimuat:', resultIzin.reason);
                     dataStore.izin.all = [];
                 }
 
@@ -490,7 +455,6 @@
                 dataContainer.classList.remove('hidden');
 
             } catch (error) {
-                console.error('Fetch Error:', error);
                 showError(error.message);
             }
         }
@@ -573,12 +537,8 @@
                 reportTitle.innerHTML = 'DAFTAR HADIR E-PRESENSI<br>SMK NEGERI 2 TEGALSARI';
             }
 
-            // Tampilkan/sembunyikan filter khusus izin
             document.getElementById('filter-jenis-container').classList.toggle('hidden', !isIzin);
 
-            // Sesuaikan jumlah kolom grid filter
-            // Hadir: 4 kolom (Nama, Kelas, Jurusan, Reset)
-            // Izin: 5 kolom (Nama, Kelas, Jurusan, Jenis Izin, Reset)
             filterGrid.classList.toggle('lg:grid-cols-4', !isIzin);
             filterGrid.classList.toggle('lg:grid-cols-5', isIzin);
 
@@ -652,6 +612,7 @@
             if (!silent) applyFilters();
         }
 
+        // =============== FUNGSI RENDER TABEL (DENGAN KOLOM KELAS) ===============
         function renderTable() {
             tableHead.innerHTML = '';
             tableBody.innerHTML = '';
@@ -660,7 +621,8 @@
 
             let manualHeaders;
             if (activeTab === 'hadir') {
-                manualHeaders = ["No", "Nama", "Jurusan", "Waktu", "Koordinat", "Jarak"];
+                // ✅ PERUBAHAN: Tambah "Kelas" setelah "Nama"
+                manualHeaders = ["No", "Nama", "Kelas", "Jurusan", "Waktu", "Koordinat", "Jarak"];
             } else {
                 manualHeaders = ["No", "Nama", "Kelas", "Jurusan", "Jenis Izin", "Keterangan", "Waktu"];
             }
@@ -699,6 +661,14 @@
                 tr.appendChild(tdNama);
 
                 if (activeTab === 'hadir') {
+                    // === TAB HADIR ===
+                    
+                    // ✅ PERUBAHAN: Tambah kolom KELAS (setelah Nama, sebelum Jurusan)
+                    const tdKelas = document.createElement('td');
+                    tdKelas.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
+                    tdKelas.textContent = data.kelas;
+                    tr.appendChild(tdKelas);
+
                     const tdJurusan = document.createElement('td');
                     tdJurusan.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
                     tdJurusan.textContent = data.jurusan;
@@ -709,7 +679,6 @@
                     tdWaktu.textContent = data.waktu;
                     tr.appendChild(tdWaktu);
 
-                    // Koordinat: RATA KIRI (text-left)
                     const tdKoordinat = document.createElement('td');
                     tdKoordinat.className = 'px-4 py-4 text-xs text-left text-gray-500 whitespace-nowrap';
                     tdKoordinat.textContent = data.koordinat;
@@ -720,6 +689,7 @@
                     tdJarak.textContent = data.jarak;
                     tr.appendChild(tdJarak);
                 } else {
+                    // === TAB IZIN ===
                     const tdKelas = document.createElement('td');
                     tdKelas.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
                     tdKelas.textContent = data.kelas;
