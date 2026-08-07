@@ -126,6 +126,58 @@
         .empty-state.active {
             display: block;
         }
+
+        /* Tab Styling */
+        .tab-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: #111827;
+            background: #f9fafb;
+        }
+
+        .tab-btn.active {
+            color: #111827;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-btn .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 6px;
+            border-radius: 11px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .tab-btn.active .badge {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .tab-btn .tab-icon {
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -142,22 +194,36 @@
                 <p class="uppercase font-bold leading-tight text-12pt">DINAS PENDIDIKAN</p>
                 <p class="uppercase font-bold leading-tight text-16pt">SEKOLAH MENENGAH KEJURUAN NEGERI 2 TEGALSARI</p>
                 <p class="text-10pt leading-tight italic">Jalan KH. Achmad Musayyidi Nomor 2 Karangdoro, Tegalsari, Banyuwangi, 68491</p>
-                <p class="text-10pt leading-tight italic text-blue-600">Telepon 0812 1682 9150 Pos-el smknegeri2tegalsari@gmail.com</p>
+                <p class="text-10pt leading-tight italic text-blue-600">Telepon 0812 1682 9150 Posel smknegeri2tegalsari@gmail.com</p>
             </div>
             <div class="hidden sm:block w-[80px]"></div>
         </div>
 
-        <!-- Judul Laporan -->
+        <!-- Judul Laporan (Dinamis sesuai tab) -->
         <div class="text-center mb-10 font-modern">
-            <h1 class="text-14pt font-bold text-gray-800 uppercase leading-snug">
-                DAFTAR HADIR E-PRESENSI MURID<br>
-                SMK NEGERI 2 TEGALSARI
+            <h1 id="report-title" class="text-14pt font-bold text-gray-800 uppercase leading-snug">
+                DAFTAR NAMA MURID<br>
+                YANG MELAKUKAN PRESENSI KEHADIRAN
             </h1>
             <p class="text-12pt text-gray-600 mt-2 font-semibold" id="current-date"></p>
         </div>
 
         <!-- Main Content Area -->
         <div id="app-container" class="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
+
+            <!-- Tab Switcher -->
+            <div id="tab-container" class="flex border-b border-gray-200 bg-white overflow-x-auto font-modern">
+                <button id="tab-hadir" class="tab-btn active" onclick="switchTab('hadir')">
+                    <span class="tab-icon">✅</span>
+                    <span>Daftar Hadir</span>
+                    <span id="badge-hadir" class="badge">0</span>
+                </button>
+                <button id="tab-izin" class="tab-btn" onclick="switchTab('izin')">
+                    <span class="tab-icon">📝</span>
+                    <span>Daftar Izin</span>
+                    <span id="badge-izin" class="badge">0</span>
+                </button>
+            </div>
             
             <!-- Loading State -->
             <div id="loading-state" class="flex flex-col items-center justify-center p-24 font-modern italic">
@@ -174,7 +240,7 @@
                 </div>
                 <h2 class="text-2xl font-bold text-gray-400/50 mb-3 tracking-tight">Data presensi hari ini tidak tersedia</h2>
                 <p id="error-message" class="text-gray-300/40 max-w-md leading-relaxed mb-8 text-sm font-medium">Gagal mengambil data dari server.</p>
-                <button onclick="fetchData()" class="px-10 py-3.5 bg-gray-900 text-white rounded-lg font-bold hover:bg-black transform transition active:scale-95 shadow-lg shadow-gray-200 uppercase text-xs tracking-widest">
+                <button onclick="fetchAllData()" class="px-10 py-3.5 bg-gray-900 text-white rounded-lg font-bold hover:bg-black transform transition active:scale-95 shadow-lg shadow-gray-200 uppercase text-xs tracking-widest">
                     MUAT ULANG DATA
                 </button>
             </div>
@@ -190,24 +256,38 @@
                         </svg>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Filter Data</h3>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div id="filter-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <!-- Filter Nama -->
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Cari Nama Murid</label>
                             <input type="text" id="filter-nama" class="filter-input w-full" placeholder="Ketik nama...">
                         </div>
-                        <!-- Filter Jurusan -->
+                        <!-- Filter Kelas -->
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Kelas</label>
-                            <select id="filter-jurusan" class="filter-input w-full">
+                            <select id="filter-kelas" class="filter-input w-full">
                                 <option value="">Semua Kelas</option>
                             </select>
                         </div>
-                        <!-- Filter Kelas -->
+                        <!-- Filter Jurusan -->
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Jurusan</label>
-                            <select id="filter-kelas" class="filter-input w-full">
+                            <select id="filter-jurusan" class="filter-input w-full">
                                 <option value="">Semua Jurusan</option>
+                            </select>
+                        </div>
+                        <!-- Filter Jenis Izin (hanya tab Izin) -->
+                        <div id="filter-jenis-container" class="hidden">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Izin</label>
+                            <select id="filter-jenis" class="filter-input w-full">
+                                <option value="">Semua Jenis</option>
+                            </select>
+                        </div>
+                        <!-- Filter Tanggal (hanya tab Izin) -->
+                        <div id="filter-tanggal-container" class="hidden">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Tanggal</label>
+                            <select id="filter-tanggal" class="filter-input w-full">
+                                <option value="">Semua Tanggal</option>
                             </select>
                         </div>
                         <!-- Reset Filter -->
@@ -234,7 +314,7 @@
                     </table>
                 </div>
 
-                <!-- Empty State (saat filter tidak menemukan data) -->
+                <!-- Empty State -->
                 <div id="empty-state" class="empty-state font-modern">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -245,12 +325,8 @@
 
                 <!-- Pagination Controls -->
                 <div id="pagination-container" class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gray-50/50 border-t border-gray-200 font-modern">
-                    <p id="pagination-info" class="text-sm text-gray-500 font-medium">
-                        <!-- Info halaman -->
-                    </p>
-                    <div id="pagination-buttons" class="flex flex-wrap items-center gap-2">
-                        <!-- Tombol halaman -->
-                    </div>
+                    <p id="pagination-info" class="text-sm text-gray-500 font-medium"></p>
+                    <div id="pagination-buttons" class="flex flex-wrap items-center gap-2"></div>
                 </div>
             </div>
         </div>
@@ -264,26 +340,41 @@
     <script>
         /**
          * ============================================================
-         * KONFIGURASI APLIKASI - SILAKAN DISESUAIKAN
+         * KONFIGURASI APLIKASI
          * ============================================================
          */
         const LOGO_URL = 'https://lh3.googleusercontent.com/u/0/d/1H50VHCq-M7qyzYHO-Ftq3QtTfp0Fkgyf';
-        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJP1ppPrXAKGP8jhTx7KgygjghYt_3ppQ3i2fcCm82ag05A4uiYbvwA31okf4mG2oKpTc1_u7hwloX/pub?gid=0&single=true&output=csv';
+        
+        // Sheet AbsenHarian (gid=0)
+        const SHEET_CSV_URL_HADIR = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJP1ppPrXAKGP8jhTx7KgygjghYt_3ppQ3i2fcCm82ag05A4uiYbvwA31okf4mG2oKpTc1_u7hwloX/pub?gid=0&single=true&output=csv';
+        
+        // Sheet IzinHarian (gid=457704213) - file spreadsheet yang SAMA, hanya beda tab sheet
+        const SHEET_CSV_URL_IZIN = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJP1ppPrXAKGP8jhTx7KgygjghYt_3ppQ3i2fcCm82ag05A4uiYbvwA31okf4mG2oKpTc1_u7hwloX/pub?gid=457704213&single=true&output=csv';
 
-        // PENTING: Sesuaikan index kolom (dimulai dari 0) dengan spreadsheet Anda
-        // Contoh: Jika di spreadsheet kolom A=0, B=1, C=2, dst.
-        const COLUMN_CONFIG = {
-            nama: 8,       // Kolom Nama Siswa
-            jurusan: 9,    // Kolom Jurusan (untuk filter)
-            kelas: 10,     // Kolom Kelas (sebelumnya "Keterangan")
-            waktu: 11,     // Kolom Waktu Presensi
-            koordinat: 12, // Kolom Titik Koordinat
-            jarak: 13      // Kolom Jarak
+        // Konfigurasi Kolom Sheet AbsenHarian (index dimulai dari 0)
+        const COLUMN_CONFIG_HADIR = {
+            nama: 8,       // Kolom I
+            kelas: 9,      // Kolom J (misal: XII)
+            jurusan: 10,   // Kolom K (misal: PSPT)
+            waktu: 11,     // Kolom L
+            koordinat: 12, // Kolom M
+            jarak: 13      // Kolom N
         };
 
-        // Konfigurasi Pagination
+        // Konfigurasi Kolom Sheet IzinHarian (sesuai struktur: A=No, B=Nama, dst)
+        const COLUMN_CONFIG_IZIN = {
+            nama: 1,       // Kolom B
+            kelas: 2,      // Kolom C (misal: XII)
+            jurusan: 3,    // Kolom D (misal: PSPT)
+            waktu: 4,      // Kolom E
+            tanggal: 5,    // Kolom F
+            jenis_izin: 7, // Kolom H (Izin / Sakit / Force Majeure)
+            keterangan: 8  // Kolom I
+        };
+
         const ROWS_PER_PAGE = 20;
 
+        // Elements
         const loadingState = document.getElementById('loading-state');
         const errorState = document.getElementById('error-state');
         const dataContainer = document.getElementById('data-container');
@@ -296,28 +387,43 @@
         const paginationButtons = document.getElementById('pagination-buttons');
         const emptyState = document.getElementById('empty-state');
         const filterResult = document.getElementById('filter-result');
+        const reportTitle = document.getElementById('report-title');
+        const badgeHadir = document.getElementById('badge-hadir');
+        const badgeIzin = document.getElementById('badge-izin');
+        const filterGrid = document.getElementById('filter-grid');
 
         // Filter elements
         const filterNama = document.getElementById('filter-nama');
-        const filterJurusan = document.getElementById('filter-jurusan');
         const filterKelas = document.getElementById('filter-kelas');
+        const filterJurusan = document.getElementById('filter-jurusan');
+        const filterJenis = document.getElementById('filter-jenis');
+        const filterTanggal = document.getElementById('filter-tanggal');
 
         logoKop.src = LOGO_URL;
 
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         dateDisplay.innerText = new Date().toLocaleDateString('id-ID', options);
 
-        // State untuk pagination dan filter
-        let allValidRows = [];      // Seluruh data valid dari spreadsheet (object)
-        let filteredRows = [];      // Data setelah filter diterapkan
-        let currentPage = 1;
-        let availableJurusan = [];  // List jurusan unik untuk dropdown
-        let availableKelas = [];    // List kelas unik untuk dropdown
+        // State management
+        let activeTab = 'hadir';
+        
+        const dataStore = {
+            hadir: {
+                all: [], filtered: [], currentPage: 1,
+                availableKelas: [], availableJurusan: []
+            },
+            izin: {
+                all: [], filtered: [], currentPage: 1,
+                availableKelas: [], availableJurusan: [], availableJenis: [], availableTanggal: []
+            }
+        };
 
-        // Event listener untuk filter
+        // Event listeners untuk filter
         filterNama.addEventListener('input', debounce(applyFilters, 300));
-        filterJurusan.addEventListener('change', applyFilters);
         filterKelas.addEventListener('change', applyFilters);
+        filterJurusan.addEventListener('change', applyFilters);
+        filterJenis.addEventListener('change', applyFilters);
+        filterTanggal.addEventListener('change', applyFilters);
 
         function debounce(func, wait) {
             let timeout;
@@ -327,39 +433,19 @@
             };
         }
 
-        async function fetchData() {
-            loadingState.classList.remove('hidden');
-            errorState.classList.add('hidden');
-            dataContainer.classList.add('hidden');
-
-            try {
-                const response = await fetch(`${SHEET_CSV_URL}&t=${new Date().getTime()}`, { 
-                    cache: 'no-store'
-                });
-                
-                if (!response.ok) throw new Error('Failed to fetch');
-                
-                const csvText = await response.text();
-                
-                if (csvText.includes('<!DOCTYPE html>') || csvText.includes('login')) {
-                    throw new Error('Akses Dibatasi (Publish to Web diperlukan)');
-                }
-
-                const rows = csvText.trim().split('\n').map(row => {
-                    return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                });
-
-                if (rows.length < 5) throw new Error('Data Belum Tersedia');
-
-                processAndStoreData(rows);
-            } catch (error) {
-                console.error('Fetch Error:', error);
-                if (error.message === 'Failed to fetch') {
-                    showError('Failed to fetch');
-                } else {
-                    showError(error.message);
-                }
+        // =============== FUNGSI FETCH DATA ===============
+        async function fetchCSV(url) {
+            const response = await fetch(`${url}&t=${new Date().getTime()}`, { cache: 'no-store' });
+            if (!response.ok) throw new Error('Failed to fetch');
+            
+            const csvText = await response.text();
+            if (csvText.includes('<!DOCTYPE html>') || csvText.includes('login')) {
+                throw new Error('Akses Dibatasi (Publish to Web diperlukan)');
             }
+            
+            return csvText.trim().split('\n').map(row => 
+                row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+            );
         }
 
         function cleanCellValue(value) {
@@ -367,58 +453,188 @@
             return value.replace(/^"(.*)"$/, '$1').trim();
         }
 
-        function processAndStoreData(rows) {
-            allValidRows = [];
-            const jurusanSet = new Set();
+        async function fetchAllData() {
+            loadingState.classList.remove('hidden');
+            errorState.classList.add('hidden');
+            dataContainer.classList.add('hidden');
+
+            try {
+                // Fetch kedua sheet secara paralel
+                const [resultHadir, resultIzin] = await Promise.allSettled([
+                    fetchCSV(SHEET_CSV_URL_HADIR),
+                    fetchCSV(SHEET_CSV_URL_IZIN)
+                ]);
+
+                if (resultHadir.status === 'fulfilled') {
+                    processDataHadir(resultHadir.value);
+                } else {
+                    console.warn('Data kehadiran gagal dimuat:', resultHadir.reason);
+                    dataStore.hadir.all = [];
+                }
+
+                if (resultIzin.status === 'fulfilled') {
+                    processDataIzin(resultIzin.value);
+                } else {
+                    console.warn('Data izin gagal dimuat:', resultIzin.reason);
+                    dataStore.izin.all = [];
+                }
+
+                // Update badge jumlah data
+                badgeHadir.textContent = dataStore.hadir.all.length;
+                badgeIzin.textContent = dataStore.izin.all.length;
+
+                if (dataStore.hadir.all.length === 0 && dataStore.izin.all.length === 0) {
+                    showError('Tidak ada data yang tersedia. Pastikan sheet sudah di-Publish to Web.');
+                    return;
+                }
+
+                renderCurrentTab();
+                loadingState.classList.add('hidden');
+                dataContainer.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                showError(error.message);
+            }
+        }
+
+        // Data sheet AbsenHarian (data mulai baris ke-5, index 4)
+        function processDataHadir(rows) {
+            dataStore.hadir.all = [];
             const kelasSet = new Set();
+            const jurusanSet = new Set();
 
             for (let i = 4; i < rows.length; i++) {
                 if (!rows[i] || rows[i].join('').trim() === "") continue;
                 
                 const row = rows[i];
-                const namaCell = cleanCellValue(row[COLUMN_CONFIG.nama]);
-                
+                const namaCell = cleanCellValue(row[COLUMN_CONFIG_HADIR.nama]);
                 if (!namaCell || namaCell === '""') continue;
                 
                 const data = {
                     nama: namaCell,
-                    jurusan: cleanCellValue(row[COLUMN_CONFIG.jurusan]),
-                    kelas: cleanCellValue(row[COLUMN_CONFIG.kelas]),
-                    waktu: cleanCellValue(row[COLUMN_CONFIG.waktu]),
-                    koordinat: cleanCellValue(row[COLUMN_CONFIG.koordinat]),
-                    jarak: cleanCellValue(row[COLUMN_CONFIG.jarak])
+                    kelas: cleanCellValue(row[COLUMN_CONFIG_HADIR.kelas]),
+                    jurusan: cleanCellValue(row[COLUMN_CONFIG_HADIR.jurusan]),
+                    waktu: cleanCellValue(row[COLUMN_CONFIG_HADIR.waktu]),
+                    koordinat: cleanCellValue(row[COLUMN_CONFIG_HADIR.koordinat]),
+                    jarak: cleanCellValue(row[COLUMN_CONFIG_HADIR.jarak])
                 };
 
-                allValidRows.push(data);
-                
-                // Simpan jurusan & kelas unik untuk dropdown filter
-                if (data.jurusan) jurusanSet.add(data.jurusan);
+                dataStore.hadir.all.push(data);
                 if (data.kelas) kelasSet.add(data.kelas);
+                if (data.jurusan) jurusanSet.add(data.jurusan);
             }
 
-            if (allValidRows.length === 0) {
-                showError('Tidak ada data murid.');
-                return;
-            }
-
-            // Sort alphabetically
-            availableJurusan = Array.from(jurusanSet).sort();
-            availableKelas = Array.from(kelasSet).sort((a, b) => a.localeCompare(b, 'id'));
-
-            // Isi dropdown filter
-            populateDropdown(filterJurusan, availableJurusan, 'Semua Kelas');
-            populateDropdown(filterKelas, availableKelas, 'Semua Jurusan');
-
-            currentPage = 1;
-            applyFilters();
-
-            loadingState.classList.add('hidden');
-            dataContainer.classList.remove('hidden');
+            dataStore.hadir.availableKelas = Array.from(kelasSet).sort((a, b) => a.localeCompare(b, 'id'));
+            dataStore.hadir.availableJurusan = Array.from(jurusanSet).sort();
         }
 
-        function populateDropdown(selectElement, options, defaultText) {
+        // Data sheet IzinHarian (struktur: baris 1-2 judul, baris 3 kosong, baris 4 header, data mulai baris 5)
+        function processDataIzin(rows) {
+            dataStore.izin.all = [];
+            const kelasSet = new Set();
+            const jurusanSet = new Set();
+            const jenisSet = new Set();
+            const tanggalSet = new Set();
+
+            for (let i = 4; i < rows.length; i++) {
+                if (!rows[i] || rows[i].join('').trim() === "") continue;
+                
+                const row = rows[i];
+                const namaCell = cleanCellValue(row[COLUMN_CONFIG_IZIN.nama]);
+                if (!namaCell || namaCell === '""') continue;
+                
+                const data = {
+                    nama: namaCell,
+                    kelas: cleanCellValue(row[COLUMN_CONFIG_IZIN.kelas]),
+                    jurusan: cleanCellValue(row[COLUMN_CONFIG_IZIN.jurusan]),
+                    waktu: cleanCellValue(row[COLUMN_CONFIG_IZIN.waktu]),
+                    tanggal: cleanCellValue(row[COLUMN_CONFIG_IZIN.tanggal]),
+                    jenis_izin: cleanCellValue(row[COLUMN_CONFIG_IZIN.jenis_izin]),
+                    keterangan: cleanCellValue(row[COLUMN_CONFIG_IZIN.keterangan])
+                };
+
+                dataStore.izin.all.push(data);
+                if (data.kelas) kelasSet.add(data.kelas);
+                if (data.jurusan) jurusanSet.add(data.jurusan);
+                if (data.jenis_izin) jenisSet.add(data.jenis_izin);
+                if (data.tanggal) tanggalSet.add(data.tanggal);
+            }
+
+            dataStore.izin.availableKelas = Array.from(kelasSet).sort((a, b) => a.localeCompare(b, 'id'));
+            dataStore.izin.availableJurusan = Array.from(jurusanSet).sort();
+            dataStore.izin.availableJenis = Array.from(jenisSet).sort();
+            dataStore.izin.availableTanggal = sortTanggal(Array.from(tanggalSet));
+        }
+
+        // Urutkan tanggal format D/M/YYYY secara kronologis
+        function sortTanggal(arr) {
+            return arr.sort((a, b) => {
+                const va = tanggalValue(a), vb = tanggalValue(b);
+                if (va !== null && vb !== null) return va - vb;
+                return a.localeCompare(b);
+            });
+        }
+
+        function tanggalValue(str) {
+            const parts = str.split('/');
+            if (parts.length === 3) {
+                const d = parseInt(parts[0]), m = parseInt(parts[1]), y = parseInt(parts[2]);
+                if (!isNaN(d) && !isNaN(m) && !isNaN(y)) return y * 10000 + m * 100 + d;
+            }
+            return null;
+        }
+
+        // =============== FUNGSI TAB ===============
+        function switchTab(tab) {
+            if (tab === activeTab) return;
+            
+            activeTab = tab;
+            const isIzin = (tab === 'izin');
+            
+            // Update tombol tab
+            document.getElementById('tab-hadir').classList.toggle('active', !isIzin);
+            document.getElementById('tab-izin').classList.toggle('active', isIzin);
+            
+            // Update judul laporan
+            if (isIzin) {
+                reportTitle.innerHTML = 'DAFTAR NAMA MURID<br>YANG MENGAJUKAN IZIN TIDAK HADIR';
+            } else {
+                reportTitle.innerHTML = 'DAFTAR NAMA MURID<br>YANG MELAKUKAN PRESENSI KEHADIRAN';
+            }
+
+            // Tampilkan/sembunyikan filter khusus izin
+            document.getElementById('filter-jenis-container').classList.toggle('hidden', !isIzin);
+            document.getElementById('filter-tanggal-container').classList.toggle('hidden', !isIzin);
+
+            // Sesuaikan jumlah kolom grid filter
+            filterGrid.classList.toggle('lg:grid-cols-4', !isIzin);
+            filterGrid.classList.toggle('lg:grid-cols-6', isIzin);
+
+            // Reset filter saat ganti tab
+            resetFilters(true);
+            
+            renderCurrentTab();
+        }
+
+        function renderCurrentTab() {
+            const store = dataStore[activeTab];
+            
+            populateDropdown(filterKelas, store.availableKelas, 'Semua Kelas');
+            populateDropdown(filterJurusan, store.availableJurusan, 'Semua Jurusan');
+            
+            if (activeTab === 'izin') {
+                populateDropdown(filterJenis, store.availableJenis, 'Semua Jenis');
+                populateDropdown(filterTanggal, store.availableTanggal, 'Semua Tanggal');
+            }
+
+            applyFilters();
+        }
+
+        // =============== FUNGSI FILTER ===============
+        function populateDropdown(selectElement, optionsList, defaultText) {
             selectElement.innerHTML = `<option value="">${defaultText}</option>`;
-            options.forEach(opt => {
+            optionsList.forEach(opt => {
                 const option = document.createElement('option');
                 option.value = opt;
                 option.textContent = opt;
@@ -427,44 +643,67 @@
         }
 
         function applyFilters() {
+            const store = dataStore[activeTab];
             const searchNama = filterNama.value.trim().toLowerCase();
-            const selectedJurusan = filterJurusan.value;
             const selectedKelas = filterKelas.value;
+            const selectedJurusan = filterJurusan.value;
+            const selectedJenis = filterJenis.value;
+            const selectedTanggal = filterTanggal.value;
 
-            filteredRows = allValidRows.filter(data => {
+            store.filtered = store.all.filter(data => {
                 const matchNama = !searchNama || data.nama.toLowerCase().includes(searchNama);
-                const matchJurusan = !selectedJurusan || data.jurusan === selectedJurusan;
                 const matchKelas = !selectedKelas || data.kelas === selectedKelas;
-                return matchNama && matchJurusan && matchKelas;
+                const matchJurusan = !selectedJurusan || data.jurusan === selectedJurusan;
+                
+                if (activeTab === 'izin') {
+                    const matchJenis = !selectedJenis || data.jenis_izin === selectedJenis;
+                    const matchTanggal = !selectedTanggal || data.tanggal === selectedTanggal;
+                    return matchNama && matchKelas && matchJurusan && matchJenis && matchTanggal;
+                }
+                
+                return matchNama && matchKelas && matchJurusan;
             });
 
             // Update info hasil filter
-            if (searchNama || selectedJurusan || selectedKelas) {
-                filterResult.textContent = `Ditemukan ${filteredRows.length} dari ${allValidRows.length} data`;
+            const labelData = activeTab === 'hadir' ? 'data presensi' : 'data izin';
+            if (searchNama || selectedKelas || selectedJurusan || selectedJenis || selectedTanggal) {
+                filterResult.textContent = `Ditemukan ${store.filtered.length} dari ${store.all.length} ${labelData}`;
                 filterResult.classList.add('text-blue-600');
                 filterResult.classList.remove('text-gray-500');
             } else {
-                filterResult.textContent = `Total ${allValidRows.length} data presensi`;
+                filterResult.textContent = `Total ${store.all.length} ${labelData}`;
                 filterResult.classList.remove('text-blue-600');
                 filterResult.classList.add('text-gray-500');
             }
 
-            // Reset ke halaman 1 saat filter berubah
-            currentPage = 1;
+            store.currentPage = 1;
             renderTable();
         }
 
-        function resetFilters() {
+        function resetFilters(silent = false) {
             filterNama.value = '';
-            filterJurusan.value = '';
             filterKelas.value = '';
-            applyFilters();
+            filterJurusan.value = '';
+            filterJenis.value = '';
+            filterTanggal.value = '';
+            if (!silent) applyFilters();
         }
 
+        // =============== FUNGSI RENDER TABEL ===============
         function renderTable() {
-            // Render Header Tabel
             tableHead.innerHTML = '';
-            const manualHeaders = ["No", "Nama", "Jurusan", "Waktu", "Koordinat", "Jarak"];
+            tableBody.innerHTML = '';
+            
+            const store = dataStore[activeTab];
+
+            // Header berbeda per tab
+            let manualHeaders;
+            if (activeTab === 'hadir') {
+                manualHeaders = ["No", "Nama", "Jurusan", "Waktu", "Koordinat", "Jarak"];
+            } else {
+                manualHeaders = ["No", "Nama", "Kelas", "Jurusan", "Jenis Izin", "Keterangan", "Waktu", "Tanggal"];
+            }
+
             manualHeaders.forEach((headerText) => {
                 const th = document.createElement('th');
                 th.className = `px-4 py-4 text-sm font-extrabold text-gray-700 border-b border-gray-200 uppercase text-center tracking-widest bg-gray-50/50 whitespace-nowrap`;
@@ -472,26 +711,23 @@
                 tableHead.appendChild(th);
             });
 
-            // Render Body Tabel sesuai halaman aktif
-            tableBody.innerHTML = '';
-            
-            // Tampilkan empty state jika tidak ada data setelah filter
-            if (filteredRows.length === 0) {
+            if (store.filtered.length === 0) {
                 emptyState.classList.add('active');
                 document.getElementById('pagination-container').classList.add('hidden');
                 return;
             }
             emptyState.classList.remove('active');
 
-            const totalPages = Math.ceil(filteredRows.length / ROWS_PER_PAGE);
-            const startIndex = (currentPage - 1) * ROWS_PER_PAGE;
-            const endIndex = Math.min(startIndex + ROWS_PER_PAGE, filteredRows.length);
-            const pageRows = filteredRows.slice(startIndex, endIndex);
+            const totalPages = Math.ceil(store.filtered.length / ROWS_PER_PAGE);
+            const startIndex = (store.currentPage - 1) * ROWS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ROWS_PER_PAGE, store.filtered.length);
+            const pageRows = store.filtered.slice(startIndex, endIndex);
 
             pageRows.forEach((data, index) => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-blue-50/30 transition-colors';
                 
+                // Nomor
                 const tdNo = document.createElement('td');
                 tdNo.className = 'px-4 py-4 text-sm font-medium text-gray-400 text-center w-12';
                 tdNo.textContent = startIndex + index + 1;
@@ -503,29 +739,72 @@
                 tdNama.textContent = data.nama;
                 tr.appendChild(tdNama);
 
-                // Kelas
-                const tdKelas = document.createElement('td');
-                tdKelas.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
-                tdKelas.textContent = data.kelas;
-                tr.appendChild(tdKelas);
+                if (activeTab === 'hadir') {
+                    // === TAB HADIR ===
+                    const tdJurusan = document.createElement('td');
+                    tdJurusan.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
+                    tdJurusan.textContent = data.jurusan;
+                    tr.appendChild(tdJurusan);
 
-                // Waktu
-                const tdWaktu = document.createElement('td');
-                tdWaktu.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
-                tdWaktu.textContent = data.waktu;
-                tr.appendChild(tdWaktu);
+                    const tdWaktu = document.createElement('td');
+                    tdWaktu.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
+                    tdWaktu.textContent = data.waktu;
+                    tr.appendChild(tdWaktu);
 
-                // Koordinat
-                const tdKoordinat = document.createElement('td');
-                tdKoordinat.className = 'px-4 py-4 text-xs text-center text-gray-500 whitespace-nowrap';
-                tdKoordinat.textContent = data.koordinat;
-                tr.appendChild(tdKoordinat);
+                    const tdKoordinat = document.createElement('td');
+                    tdKoordinat.className = 'px-4 py-4 text-xs text-center text-gray-500 whitespace-nowrap';
+                    tdKoordinat.textContent = data.koordinat;
+                    tr.appendChild(tdKoordinat);
 
-                // Jarak
-                const tdJarak = document.createElement('td');
-                tdJarak.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
-                tdJarak.textContent = data.jarak;
-                tr.appendChild(tdJarak);
+                    const tdJarak = document.createElement('td');
+                    tdJarak.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
+                    tdJarak.textContent = data.jarak;
+                    tr.appendChild(tdJarak);
+                } else {
+                    // === TAB IZIN ===
+                    const tdKelas = document.createElement('td');
+                    tdKelas.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
+                    tdKelas.textContent = data.kelas;
+                    tr.appendChild(tdKelas);
+
+                    const tdJurusan = document.createElement('td');
+                    tdJurusan.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
+                    tdJurusan.textContent = data.jurusan;
+                    tr.appendChild(tdJurusan);
+
+                    // Jenis Izin dengan badge berwarna
+                    const tdJenis = document.createElement('td');
+                    tdJenis.className = 'px-4 py-4 text-center whitespace-nowrap';
+                    const badge = document.createElement('span');
+                    let badgeClass = 'bg-gray-100 text-gray-700';
+                    const jenis = data.jenis_izin.toLowerCase();
+                    if (jenis.includes('sakit')) badgeClass = 'bg-orange-100 text-orange-700';
+                    else if (jenis.includes('force')) badgeClass = 'bg-purple-100 text-purple-700';
+                    else if (jenis.includes('izin')) badgeClass = 'bg-blue-100 text-blue-700';
+                    else if (jenis.includes('alpa')) badgeClass = 'bg-red-100 text-red-700';
+                    badge.className = `inline-block px-3 py-1 text-xs font-semibold rounded-full ${badgeClass}`;
+                    badge.textContent = data.jenis_izin;
+                    tdJenis.appendChild(badge);
+                    tr.appendChild(tdJenis);
+
+                    // Keterangan
+                    const tdKet = document.createElement('td');
+                    tdKet.className = 'px-4 py-4 text-sm text-left text-gray-600 min-w-[200px]';
+                    tdKet.textContent = data.keterangan || '-';
+                    tr.appendChild(tdKet);
+
+                    // Waktu
+                    const tdWaktu = document.createElement('td');
+                    tdWaktu.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
+                    tdWaktu.textContent = data.waktu;
+                    tr.appendChild(tdWaktu);
+
+                    // Tanggal
+                    const tdTanggal = document.createElement('td');
+                    tdTanggal.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
+                    tdTanggal.textContent = data.tanggal;
+                    tr.appendChild(tdTanggal);
+                }
                 
                 tableBody.appendChild(tr);
             });
@@ -533,10 +812,12 @@
             renderPagination(totalPages);
         }
 
+        // =============== FUNGSI PAGINATION ===============
         function renderPagination(totalPages) {
-            const startIndex = (currentPage - 1) * ROWS_PER_PAGE + 1;
-            const endIndex = Math.min(currentPage * ROWS_PER_PAGE, filteredRows.length);
-            paginationInfo.innerHTML = `Menampilkan <span class="font-semibold text-gray-700">${startIndex}-${endIndex}</span> dari <span class="font-semibold text-gray-700">${filteredRows.length}</span> data`;
+            const store = dataStore[activeTab];
+            const startIndex = (store.currentPage - 1) * ROWS_PER_PAGE + 1;
+            const endIndex = Math.min(store.currentPage * ROWS_PER_PAGE, store.filtered.length);
+            paginationInfo.innerHTML = `Menampilkan <span class="font-semibold text-gray-700">${startIndex}-${endIndex}</span> dari <span class="font-semibold text-gray-700">${store.filtered.length}</span> data`;
 
             paginationButtons.innerHTML = '';
 
@@ -549,11 +830,11 @@
             const prevBtn = document.createElement('button');
             prevBtn.className = 'pagination-btn';
             prevBtn.innerHTML = '&larr; Sebelumnya';
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.onclick = () => goToPage(currentPage - 1);
+            prevBtn.disabled = store.currentPage === 1;
+            prevBtn.onclick = () => goToPage(store.currentPage - 1);
             paginationButtons.appendChild(prevBtn);
 
-            const pageNumbers = getPageNumbers(currentPage, totalPages);
+            const pageNumbers = getPageNumbers(store.currentPage, totalPages);
             pageNumbers.forEach(p => {
                 const btn = document.createElement('button');
                 if (p === '...') {
@@ -562,7 +843,7 @@
                     btn.disabled = true;
                 } else {
                     btn.className = 'pagination-btn';
-                    if (p === currentPage) btn.classList.add('active');
+                    if (p === store.currentPage) btn.classList.add('active');
                     btn.textContent = p;
                     btn.onclick = () => goToPage(p);
                 }
@@ -572,8 +853,8 @@
             const nextBtn = document.createElement('button');
             nextBtn.className = 'pagination-btn';
             nextBtn.innerHTML = 'Selanjutnya &rarr;';
-            nextBtn.disabled = currentPage === totalPages;
-            nextBtn.onclick = () => goToPage(currentPage + 1);
+            nextBtn.disabled = store.currentPage === totalPages;
+            nextBtn.onclick = () => goToPage(store.currentPage + 1);
             paginationButtons.appendChild(nextBtn);
         }
 
@@ -593,7 +874,7 @@
         }
 
         function goToPage(page) {
-            currentPage = page;
+            dataStore[activeTab].currentPage = page;
             renderTable();
             dataContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -605,7 +886,7 @@
             errorMessage.textContent = msg;
         }
 
-        window.onload = fetchData;
+        window.onload = fetchAllData;
     </script>
 </body>
 </html>
