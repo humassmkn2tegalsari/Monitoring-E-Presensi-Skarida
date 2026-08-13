@@ -400,6 +400,7 @@
             };
         }
 
+        // ✅ FUNGSI fetchCSV YANG DIPERBAIKI
         async function fetchCSV(url) {
             const response = await fetch(`${url}&t=${new Date().getTime()}`, { cache: 'no-store' });
             if (!response.ok) throw new Error('Failed to fetch');
@@ -409,14 +410,72 @@
                 throw new Error('Akses Dibatasi (Publish to Web diperlukan)');
             }
             
-            return csvText.trim().split('\n').map(row => 
-                row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
-            );
+            // Gunakan parser CSV standar RFC 4180 (aman untuk sel berisi enter/baris baru)
+            return parseCSV(csvText);
         }
 
+        // ✅ PARSER CSV BARU - mengikuti standar RFC 4180
+        // Menangani sel yang berisi koma, tanda kutip, DAN baris baru (enter) di dalam tanda kutip
+        function parseCSV(text) {
+            const rows = [];
+            let row = [];
+            let field = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const c = text.charAt(i);
+
+                if (inQuotes) {
+                    if (c === '"') {
+                        // Cek apakah ini tanda kutip escape (dua kutip berurutan "")
+                        if (text.charAt(i + 1) === '"') {
+                            field += '"';
+                            i++; // Skip tanda kutip berikutnya
+                        } else {
+                            // Tanda kutip penutup sel
+                            inQuotes = false;
+                        }
+                    } else {
+                        // Karakter di dalam tanda kutip (termasuk baris baru)
+                        field += c;
+                    }
+                } else {
+                    if (c === '"') {
+                        // Mulai sel yang dibungkus tanda kutip
+                        inQuotes = true;
+                    } else if (c === ',') {
+                        // Pemisah antar kolom
+                        row.push(field);
+                        field = '';
+                    } else if (c === '\n') {
+                        // Akhir baris
+                        row.push(field);
+                        rows.push(row);
+                        row = [];
+                        field = '';
+                    } else if (c === '\r') {
+                        // Abaikan carriage return (Windows)
+                    } else {
+                        // Karakter biasa
+                        field += c;
+                    }
+                }
+            }
+
+            // Simpan baris & field terakhir (jika file CSV tidak diakhiri \n)
+            row.push(field);
+            rows.push(row);
+
+            return rows;
+        }
+
+        // ✅ cleanCellValue DIPERBAIKI - hapus baris baru di dalam sel
         function cleanCellValue(value) {
             if (!value) return '';
-            return value.replace(/^"(.*)"$/, '$1').trim();
+            return value
+                .replace(/^"(.*)"$/, '$1')  // hapus kutip pembungkus
+                .replace(/[\n\r]+/g, ' ')   // ganti enter dengan spasi
+                .trim();
         }
 
         async function fetchAllData() {
@@ -612,7 +671,6 @@
             if (!silent) applyFilters();
         }
 
-        // =============== FUNGSI RENDER TABEL (DENGAN KOLOM KELAS) ===============
         function renderTable() {
             tableHead.innerHTML = '';
             tableBody.innerHTML = '';
@@ -621,7 +679,6 @@
 
             let manualHeaders;
             if (activeTab === 'hadir') {
-                // ✅ PERUBAHAN: Tambah "Kelas" setelah "Nama"
                 manualHeaders = ["No", "Nama", "Kelas", "Jurusan", "Waktu", "Koordinat", "Jarak"];
             } else {
                 manualHeaders = ["No", "Nama", "Kelas", "Jurusan", "Jenis Izin", "Keterangan", "Waktu"];
@@ -661,9 +718,6 @@
                 tr.appendChild(tdNama);
 
                 if (activeTab === 'hadir') {
-                    // === TAB HADIR ===
-                    
-                    // ✅ PERUBAHAN: Tambah kolom KELAS (setelah Nama, sebelum Jurusan)
                     const tdKelas = document.createElement('td');
                     tdKelas.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
                     tdKelas.textContent = data.kelas;
@@ -689,7 +743,6 @@
                     tdJarak.textContent = data.jarak;
                     tr.appendChild(tdJarak);
                 } else {
-                    // === TAB IZIN ===
                     const tdKelas = document.createElement('td');
                     tdKelas.className = 'px-4 py-4 text-sm text-center text-gray-600 whitespace-nowrap';
                     tdKelas.textContent = data.kelas;
